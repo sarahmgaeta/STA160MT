@@ -1,0 +1,86 @@
+---
+title: "STA 160 Midterm1"
+author: "Eric Gao"
+date: "4/11/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo = FALSE, message = FALSE, warning=FALSE}
+setwd("~/STA160")
+library(tidyverse)
+library(readxl)
+library(corrplot)
+```
+
+```{r}
+airbnb =  read_csv("Airbnb_NYC_2019.csv", col_types = cols())
+```
+
+# What causes prices to be high and can we make a model to predict the price.
+
+
+First, we will plot the correlograms between the columns of numerical type
+
+```{r}
+updated_airbnb = airbnb %>% keep(is.numeric)
+updated = updated_airbnb[,-c(1,2,3,4)] %>% na.omit()
+pairs(updated)
+```
+
+Next, we will plot the respective correlation matrix between the numerical variables:
+
+```{r}
+corrplot(cor(updated), method = "number")
+```
+Both the correlation table and correlation matrix show that there is no significant collinearity so we can proceed.
+
+We will get rid of zero price, because a price of 0 is senseless:
+
+```{r}
+price_over0 = which(airbnb$price > 0)
+airbnb = airbnb[price_over0, ]
+```
+
+First, we want to see if prices are greater for certain neighborhood groups:
+
+```{r}
+ggplot(airbnb, aes(price, fill = neighbourhood_group)) + geom_histogram()
+```
+
+From here, we can see that this
+
+
+We will remove the name and host_name columns since they are represented by id and host_id:
+
+```{r}
+new_air = airbnb[, -c(2, 4)]
+```   
+
+Let's check if places with more reviews have higher prices per neighbor group. First, subset the number of reviews to be greater than 0
+
+```{r}
+reviews_over_zero = which(new_air$number_of_reviews > 0)
+new_air1 = new_air[reviews_over_zero, ]
+ggplot(new_air1, aes(price, number_of_reviews, color = as.factor(neighbourhood_group))) + geom_point()
+```
+
+There is no clear association between price and the number of reviews per neighborhood group.
+
+
+Let's look at room type compared to price.
+
+```{r}
+ggplot(new_air, aes(minimum_nights, price, color = room_type)) + geom_point()
+```
+
+This scatterplot is too broad. We want to shrink the x axis. The average nights is only 7. Let's look at the range between 1 and 100.
+
+
+
+
+
+
