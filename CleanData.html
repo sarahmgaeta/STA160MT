@@ -170,7 +170,7 @@ pre code {
 </div>
 
 
-<pre class="r"><code>airbnb =  read_csv(&quot;Airbnb_NYC_2019.csv&quot;, col_types = cols())</code></pre>
+<pre class="r"><code>airbnb = read_csv(&quot;Airbnb_NYC_2019.csv&quot;, col_types = cols())</code></pre>
 <div id="goal-clean-data" class="section level1">
 <h1>GOAL: Clean Data</h1>
 <div id="how-many-entries-are-na-in-each-column" class="section level2">
@@ -474,16 +474,28 @@ airbnb$name = gsub(&quot;[0-9]&quot;, &quot;&quot;, airbnb$name)
 word_list = str_split(airbnb$name, &quot;[[:space:]]+&quot;)
 airbnb$words_in_name = unlist(lapply(word_list, length))
 
+# Lowercase
+airbnb$name = tolower(airbnb$name)
+
+# Remove stopwords
+airbnb$name = removeWords(airbnb$name, stopwords(&#39;english&#39;))
+
 # Remove extra spaces
 airbnb$name = gsub(&quot;[[:space:]]+&quot;, &quot; &quot;, airbnb$name)
-airbnb$name = str_trim(airbnb$name)
-
-# Lowercase
-airbnb$name = tolower(airbnb$name)</code></pre>
+airbnb$name = str_trim(airbnb$name)</code></pre>
 </div>
 <div id="clean-the-host_name-column" class="section level1">
 <h1>Clean the host_name column</h1>
-<pre class="r"><code># TO DO</code></pre>
+<pre class="r"><code># Remove symbols
+airbnb$host_name = gsub(&quot;[^A-Za-z0-9[:space:]]&quot;, &quot; &quot;, airbnb$host_name)
+# Lowercase
+airbnb$host_name = tolower(airbnb$host_name)
+# Remove stopwords
+airbnb$host_name = removeWords(airbnb$host_name, stopwords(&#39;english&#39;))</code></pre>
+</div>
+<div id="export-clean-data" class="section level1">
+<h1>Export clean data</h1>
+<pre class="r"><code>write.csv(airbnb, file = &quot;clean_airbnb.csv&quot;, row.names = FALSE)</code></pre>
 </div>
 
 
