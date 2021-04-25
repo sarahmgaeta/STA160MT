@@ -1,0 +1,102 @@
+---
+title: "Cleaning Airbnb Data"
+author: "Sarah Gaeta, Eric Gao, Gili Drior"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo = FALSE, message = FALSE, warning=FALSE}
+setwd("~/STA160MT")
+library(tidyverse)
+library(readxl)
+library(stringr)
+```
+
+```{r}
+airbnb =  read_csv("Airbnb_NYC_2019.csv", col_types = cols())
+```
+
+
+# GOAL: Clean Data
+
+## How many entries are NA in each column?
+```{r}
+NA_count = data.frame(colSums(is.na(airbnb)))
+colnames(NA_count) = c("NA Count")
+
+NA_count
+```
+
+We can remove the rows with NA entries in either name or host_name.
+```{r}
+airbnb = airbnb[-which(is.na(airbnb$name) == T | is.na(airbnb$host_name == T)),]
+```
+
+
+NA entries in reviews_per_month indicate that a host has not been reviewed. Therefore, we can replace NA entries with 0. 
+```{r}
+airbnb$reviews_per_month[which(is.na(airbnb$reviews_per_month))] = 0
+```
+
+I am ignoring the last_review column for now... 
+
+## Checking entries in neighbourhood and neighbourhood_group
+```{r}
+table(airbnb$neighbourhood_group)
+table(airbnb$neighbourhood)
+```
+
+## Checking for any non-digit characters in id and host_id column
+```{r}
+# Goals:
+# grepl both ID columns
+dim(airbnb)[1] == sum(grepl("^[0-9]+$", airbnb$id))
+dim(airbnb)[1] == sum(grepl("^[0-9]+$", airbnb$host_id))
+```
+
+# Clean the names column and save metadata
+```{r}
+# Save the number of characters
+airbnb$characters_in_name = unlist(lapply(airbnb$name, nchar))
+
+# Save the number of symbols 
+#   symbols = not a character, number, or space
+#   may include periods, emojis, etc
+airbnb$symbols_in_name = str_count(airbnb$name, "[^A-Za-z0-9[:space:]']")
+
+# May not be useful, but save the # of exclamation points
+airbnb$exclamation_pts_in_name = str_count(airbnb$name, "!")
+
+# Remove certain characters in a specific way
+airbnb$name = gsub("[',&]", "", airbnb$name) # don't want to separate words or numbers by apostrophe, comma or &
+airbnb$name = gsub("[+]", " ", airbnb$name) # some titles use + as a space 
+
+# Finally, remove all the symbols
+airbnb$name = gsub("[^A-Za-z0-9[:space:]]", "", airbnb$name)
+
+# Save the number of numbers and capital letters
+airbnb$numbers_in_name = str_count(airbnb$name, "[0-9]")
+airbnb$caps_in_name = str_count(airbnb$name, "[A-Z]")
+
+# Remove numbers
+airbnb$name = gsub("[0-9]", "", airbnb$name)
+
+# Save the number of words
+word_list = str_split(airbnb$name, "[[:space:]]+")
+airbnb$words_in_name = unlist(lapply(word_list, length))
+
+# Remove extra spaces
+airbnb$name = gsub("[[:space:]]+", " ", airbnb$name)
+airbnb$name = str_trim(airbnb$name)
+
+# Lowercase
+airbnb$name = tolower(airbnb$name)
+```
+
+# Clean the host_name column
+```{r}
+# TO DO
+```
