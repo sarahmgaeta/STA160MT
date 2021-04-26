@@ -108,6 +108,9 @@ airbnb$host_name = gsub("[^A-Za-z0-9[:space:]]", " ", airbnb$host_name)
 airbnb$host_name = tolower(airbnb$host_name)
 # Remove stopwords
 airbnb$host_name = removeWords(airbnb$host_name, stopwords('english'))
+# Remove extra spaces
+airbnb$host_name = gsub("[[:space:]]+", " ", airbnb$host_name)
+airbnb$host_name = str_trim(airbnb$host_name)
 ```
 
 # Export clean data

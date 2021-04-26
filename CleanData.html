@@ -491,7 +491,10 @@ airbnb$host_name = gsub(&quot;[^A-Za-z0-9[:space:]]&quot;, &quot; &quot;, airbnb
 # Lowercase
 airbnb$host_name = tolower(airbnb$host_name)
 # Remove stopwords
-airbnb$host_name = removeWords(airbnb$host_name, stopwords(&#39;english&#39;))</code></pre>
+airbnb$host_name = removeWords(airbnb$host_name, stopwords(&#39;english&#39;))
+# Remove extra spaces
+airbnb$host_name = gsub(&quot;[[:space:]]+&quot;, &quot; &quot;, airbnb$host_name)
+airbnb$host_name = str_trim(airbnb$host_name)</code></pre>
 </div>
 <div id="export-clean-data" class="section level1">
 <h1>Export clean data</h1>
