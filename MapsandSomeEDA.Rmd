@@ -1,0 +1,112 @@
+---
+title: "STA 160 Midterm1"
+author: "Eric Gao"
+date: "4/11/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo = FALSE, message = FALSE, warning=FALSE}
+setwd("~/STA160")
+library(tidyverse)
+library(readxl)
+library(corrplot)
+library(ggmap)
+```
+
+```{r}
+airbnb =  read_csv("Airbnb_NYC_2019.csv", col_types = cols(last_review = col_date(format = "%Y-%m-%d")))
+```
+
+
+First, let's clean the data
+
+```{r}
+airbnb = airbnb %>% na.omit()
+#next remove all 0's from price
+price_0 = which(airbnb$price >0, )
+airbnb = airbnb[price_0, ]
+#use minimum nights <= 20
+```
+
+
+We will get rid of zero price, because a price of 0 is senseless:
+
+```{r}
+price_over0 = which(airbnb$price > 0)
+airbnb = airbnb[price_over0, ]
+```
+
+
+Look at the mean price for each borough:
+
+
+First, we want to see if prices are greater for certain neighborhood groups:
+#cheaper airbnbs
+
+```{r}
+ggplot(airbnb[which(airbnb$price <= 175), ], aes(x= neighbourhood_group , y= price)) + geom_boxplot()
+```
+average listenings in Manhattan more expensive ish than average of other groups.
+
+
+#more expensive:
+```{r}
+ggplot(airbnb[which(airbnb$price > 1000), ], aes(x= neighbourhood_group , y= price)) + geom_boxplot()
+```
+
+more variability around the more expensive groups in Brooklyn and Queens
+
+# what kind of airbnb has prices over 1000?-could be interesting(what is similar-could be specific people)
+```{r}
+price_500 = which(airbnb$price >= 500)
+airbnb_over_500 = airbnb[price_500, ]
+ggplot(airbnb_over_500, aes(neighbourhood_group, fill = neighbourhood_group)) + geom_bar()
+```
+
+
+
+From the plot above, we can see that for prices over $1000, we see that across all the prices, the ones that cost the most are entire homes/apts.
+
+Let's find out which borough has more of which room type for the more expensive prices(over 1000).
+
+```{r}
+expensive_air = airbnb_over_500 %>% group_by(neighbourhood_group) %>% count(room_type)
+ggplot(data = expensive_air, aes(x=room_type, y=n, fill = as.factor(neighbourhood_group))) + geom_bar(stat = "identity", position =position_dodge())
+```
+
+
+
+```{r}
+min_lat = min(airbnb$latitude)
+max_lat = max(airbnb$latitude)
+min_long = min(airbnb$longitude)
+max_long = max(airbnb$longitude)
+east_coast <- subset(states, region %in% c("new york"))
+airbnb2 = airbnb[which(airbnb$price<=175), ]
+p = ggplot(data = east_coast) +  geom_polygon(aes(x = long, y = lat, group  = group), fill = "white") + coord_fixed(1.3) 
+p + geom_point(data = airbnb2, aes(x = longitude, y=latitude, color = log(price), shape = as.factor(neighbourhood_group)), size = 2) + xlim(c(min_long, max_long)) + coord_cartesian(ylim=c(min_lat,max_lat)) + annotate("text", x = c(-73.9934, -73.9754, -73.9262, -73.8458), y = c(40.75, 40.68, 40.8296, 40.7571), 
+           label = c("MSG", "Barclays", "Yankee Stadium", "Citi Field") , color="hot pink", 
+           size=4 , angle=360, fontface="bold")  +scale_color_viridis_c() + scale_shape_discrete(name = "Borough")
+```
+
+```{r, message=F}
+min_lat = min(airbnb$latitude)
+max_lat = max(airbnb$latitude)
+min_long = min(airbnb$longitude)
+max_long = max(airbnb$longitude)
+east_coast <- subset(states, region %in% c("new york"))
+airbnb1 = airbnb[which(airbnb$price>=500), ]
+p = ggplot(data = east_coast) +  geom_polygon(aes(x = long, y = lat, group  = group), fill = "white") + coord_fixed(1.3) 
+p + geom_point(data = airbnb1, aes(x = longitude, y=latitude, color = log(price), shape = as.factor(neighbourhood_group)), size = 2) + xlim(c(min_long, max_long)) + coord_cartesian(ylim=c(min_lat,max_lat)) + annotate("text", x = c(-73.9934, -73.9754, -73.9262, -73.8458), y = c(40.75, 40.68, 40.8296, 40.7571), 
+           label = c("MSG", "Barclays", "Yankee Stadium", "Citi Field") , color="hot pink", 
+           size=4 , angle=360, fontface="bold") +scale_color_viridis_c() + scale_shape_discrete(name = "Borough")
+#maybe that not many expensive airbnbs around citi field-mets suck compared to the yankees
+#also a lot of ppl don't stay in queens
+#compare distribution of price in thosez areas(boxplot)
+```
+
+
