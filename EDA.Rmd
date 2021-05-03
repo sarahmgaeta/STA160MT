@@ -1,0 +1,240 @@
+---
+title: "sta160mt1 cp"
+author: "Gili Dror"
+date: "4/24/2021"
+output: html_document
+---
+
+```{r, echo = FALSE, message = FALSE, warning=FALSE}
+# load all necessary packages
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(cowplot)
+```
+
+```{r}
+# load airbnb data
+airbnb <- read.csv("~/Downloads/Airbnb_NYC_2019.csv")
+
+#next remove all 0's from price
+price_0 = which(airbnb$price >0, )
+airbnb = airbnb[price_0, ]
+min_nights20 = which(airbnb$minimum_nights<=20)
+airbnb = airbnb[min_nights20, ]
+```
+
+```{r}
+
+# convert price into 2 categorical groups
+price_categorical = 1:length(airbnb$price)
+for (i in price_categorical) {
+  if (airbnb$price[i] > 175){
+   price_categorical[i] = "expensive"
+  }
+  else {
+    price_categorical[i] = "not expensive"
+  }
+}
+
+airbnb_price_categorical = cbind(airbnb, price_categorical)
+```
+
+
+```{r}
+#subset airbnb for only manhattan data
+manhattan = which(airbnb_price_categorical$neighbourhood_group == "Manhattan")
+airbnb_manhattan = airbnb_price_categorical[manhattan, ]
+#subset data for only expensive airbnbs in manhattan
+manhattan_expensive = which(airbnb_manhattan$price_categorical == "expensive")
+airbnb_manhattan_expensive = airbnb_manhattan[manhattan_expensive, ]
+#find number of expensive and inexpensive airbnbs
+num_exp_manhattan = length(airbnb_manhattan_expensive$price)
+num_inexp_manhattan = length(airbnb_manhattan$price) - num_exp_manhattan
+
+#subset airbnb for only brooklyn data
+brooklyn = which(airbnb_price_categorical$neighbourhood_group == "Brooklyn")
+airbnb_brooklyn = airbnb_price_categorical[brooklyn, ]
+#subset data for only expensive airbnbs in brooklyn
+brooklyn_expensive = which(airbnb_brooklyn$price_categorical == "expensive")
+airbnb_brooklyn_expensive = airbnb_brooklyn[brooklyn_expensive, ]
+#find number of expensive and inexpensive airbnbs
+num_exp_brooklyn = length(airbnb_brooklyn_expensive$price)
+num_inexp_brooklyn = length(airbnb_brooklyn$price) - num_exp_brooklyn
+
+#subset airbnb for only queens data
+queens = which(airbnb_price_categorical$neighbourhood_group == "Queens")
+airbnb_queens = airbnb_price_categorical[queens, ]
+#subset data for only expensive airbnbs in queens
+queens_expensive = which(airbnb_queens$price_categorical == "expensive")
+airbnb_queens_expensive = airbnb_queens[queens_expensive, ]
+#find number of expensive and inexpensive airbnbs
+num_exp_queens = length(airbnb_queens_expensive$price)
+num_inexp_queens = length(airbnb_queens$price) - num_exp_queens
+
+#subset airbnb for only bronx data
+bronx = which(airbnb_price_categorical$neighbourhood_group == "Bronx")
+airbnb_bronx = airbnb_price_categorical[bronx, ]
+bronx_expensive = which(airbnb_bronx$price_categorical == "expensive")
+#subset data for only expensive airbnbs in bronx
+airbnb_bronx_expensive = airbnb_bronx[bronx_expensive, ]
+#find number of expensive and inexpensive airbnbs
+num_exp_bronx = length(airbnb_bronx_expensive$price)
+num_inexp_bronx = length(airbnb_bronx$price) - num_exp_bronx
+
+#subset airbnb for only staten data
+staten_island = which(airbnb_price_categorical$neighbourhood_group == "Staten Island")
+airbnb_staten_island = airbnb_price_categorical[staten_island, ]
+#subset data for only expensive airbnbs in staten island
+staten_island_expensive = which(airbnb_staten_island$price_categorical == "expensive")
+airbnb_staten_island_expensive = airbnb_staten_island[staten_island_expensive, ]
+#find number of expensive and inexpensive airbnbs
+num_exp_staten_island = length(airbnb_staten_island_expensive$price)
+num_inexp_staten_island = length(airbnb_staten_island$price) - num_exp_staten_island
+```
+
+
+# Top 10 Most Expensive Airbnbs
+
+```{r, message = F}
+# arrange neighbourhood prices in decreasing order 
+med_price_neighborhoods <- airbnb %>%
+  group_by(neighbourhood, neighbourhood_group) %>%
+  summarize(median_price = median(price, na.rm = TRUE)) %>%
+  arrange(desc(median_price))
+
+# 10 most expensive airbnbs
+most_exp = med_price_neighborhoods[1:10,]
+
+p<-ggplot(most_exp, aes(x=neighbourhood, y=median_price, fill= neighbourhood_group)) +
+  geom_bar(stat="identity")+theme_minimal() + ggtitle("10 Most Expensive Neighbourhoods by Median")
+p
+```
+
+```{r}
+# categories of pie chart
+data <- data.frame(slices = c(num_exp_manhattan, num_inexp_manhattan),
+                   price_type = c("Expensive","Not Expensive"),
+                   stringsAsFactors = F)
+# find percentages of categories
+data <- data %>% 
+  mutate(per=slices/sum(slices)) %>% 
+  arrange(desc(price_type))
+data$label <- scales::percent(data$per)
+# Plot pie graph
+man <- ggplot(data=data)+
+  geom_bar(aes(x="", y=per, fill=price_type), stat="identity", width = 1)+
+  coord_polar("y", start=0)+
+  theme_void()+
+  geom_text(aes(x=1, y = cumsum(per) - per/2, label=label))+
+  ggtitle("Percentage of Expensive vs. Not Expensive Airbnbs for Manhattan")
+man
+```
+
+```{r}
+# categories of pie chart
+data <- data.frame(slices = c(num_exp_brooklyn, num_inexp_brooklyn),
+                   price_type = c("Expensive","Not Expensive"),
+                   stringsAsFactors = F)
+# find percentages of categories
+data <- data %>% 
+  mutate(per=slices/sum(slices)) %>% 
+  arrange(desc(price_type))
+data$label <- scales::percent(data$per)
+# Plot pie graph
+brook <- ggplot(data=data)+
+  geom_bar(aes(x="", y=per, fill=price_type), stat="identity", width = 1)+
+  coord_polar("y", start=0)+
+  theme_void()+
+  geom_text(aes(x=1, y = cumsum(per) - per/2, label=label))+
+  ggtitle("Percentage of Expensive vs. Not Expensive Airbnbs for Brooklyn")
+brook
+```
+
+```{r}
+# categories of pie chart
+data <- data.frame(slices = c(num_exp_queens, num_inexp_queens),
+                   price_type = c("Expensive","Not Expensive"),
+                   stringsAsFactors = F)
+# find percentages of categories
+data <- data %>% 
+  mutate(per=slices/sum(slices)) %>% 
+  arrange(desc(price_type))
+data$label <- scales::percent(data$per)
+# Plot pie graph
+queens <- ggplot(data=data)+
+  geom_bar(aes(x="", y=per, fill=price_type), stat="identity", width = 1)+
+  coord_polar("y", start=0)+
+  theme_void()+
+  geom_text(aes(x=1, y = cumsum(per) - per/2, label=label))+
+  ggtitle("Percentage of Expensive vs. Not Expensive Airbnbs for Queens")
+queens
+```
+
+```{r}
+# categories of pie chart
+data <- data.frame(slices = c(num_exp_bronx, num_inexp_bronx),
+                   price_type = c("Expensive","Not Expensive"),
+                   stringsAsFactors = F)
+# find percentages
+data <- data %>% 
+  mutate(per=slices/sum(slices)) %>% 
+  arrange(desc(price_type))
+data$label <- scales::percent(data$per)
+# Plot pie graph
+bronx <- ggplot(data=data)+
+  geom_bar(aes(x="", y=per, fill=price_type), stat="identity", width = 1)+
+  coord_polar("y", start=0)+
+  theme_void()+
+  geom_text(aes(x=1, y = cumsum(per) - per/2, label=label))+
+  ggtitle("Percentage of Expensive vs. Not Expensive Airbnbs for Bronx")
+bronx
+```
+
+```{r}
+# categories of pie chart
+data <- data.frame(slices = c(num_exp_staten_island, num_inexp_staten_island),
+                   price_type = c("Expensive","Not Expensive"),
+                   stringsAsFactors = F)
+# find percentages
+data <- data %>% 
+  mutate(per=slices/sum(slices)) %>% 
+  arrange(desc(price_type))
+data$label <- scales::percent(data$per)
+# Plot pie graph
+si <- ggplot(data=data)+
+  geom_bar(aes(x="", y=per, fill=price_type), stat="identity", width = 1)+
+  coord_polar("y", start=0)+
+  theme_void()+
+  geom_text(aes(x=1, y = cumsum(per) - per/2, label=label))+
+  ggtitle("Percentage of Expensive vs. Not Expensive Airbnbs for Staten Island")
+si
+```
+
+```{r}
+plot_grid(brook, si,labels = "AUTO")
+```
+
+```{r}
+plot_grid(queens, bronx,labels = "AUTO")
+```
+
+# Plot Barplot of 10 neighborhoods with the most listings over $500 
+
+```{r}
+price_500 = which(airbnb$price >= 500)
+airbnb_over_500 = airbnb[price_500, ]
+
+num_over_500 = count(airbnb_over_500, neighbourhood)
+
+order_over_500 <- num_over_500 %>%
+  group_by(neighbourhood, n) %>%
+  arrange(desc(n))
+
+neighbourhood_group <- c("Manhattan","Manhattan", "Brooklyn", "Manhattan", "Manhattan", "Manhattan", "Manhattan", "Manhattan", "Manhattan", "Manhattan")
+
+most_exp = order_over_500[1:10,]
+ggplot(most_exp, aes(x = neighbourhood, y = n, fill = neighbourhood_group)) + geom_bar(stat = "identity") + ylab("Count")
+```
+
+
